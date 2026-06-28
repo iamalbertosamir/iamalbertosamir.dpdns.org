@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios del Admin Party
+    de Grow a Garden 2 </title>
+    <style>
+        /* Forzamos a que la imagen de fondo cubra absolutamente toda la pantalla */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            
+            /* REEMPLAZA ESTE ENLACE POR EL DE TU IMAGEN */
+            background-image: url(https://i.postimg.cc/nLc74ckQ/2-PM-20260628-160259-0000.png); 
+            background-size: cover;         /* Ajusta la imagen sin estirarla feo */
+            background-position: center;    /* Centra el fondo */
+            background-repeat: no-repeat;   /* Evita el efecto mosaico */
+            background-attachment: fixed;   /* Mantiene el fondo quieto al hacer scroll */
+            background-color: #1a252f;      /* Fondo oscuro de respaldo por si falla el link */
+            
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        /* Contenedor principal centrado */
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .input-container {
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input[type="datetime-local"] {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            width: 90%;
+            text-align: center;
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        input[type="datetime-local"]:disabled {
+            background-color: #555;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .admin-panel {
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .admin-btn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .admin-btn.logged-in {
+            background: #2ecc71;
+            cursor: default;
+        }
+
+        .apply-btn {
+            background: #2ec4b6;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            display: none;
+        }
+
+        .timezone-table {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            margin-bottom: 30px; /* Margen estético inferior */
+        }
+
+        .country-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .country-row:last-child {
+            border-bottom: none;
+        }
+
+        .country-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 45%;
+        }
+
+        .flag {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .region-tag {
+            font-size: 11px;
+            color: #ccc;
+            display: block;
+            font-weight: normal;
+        }
+
+        .time-12h {
+            width: 35%;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .day-text {
+            display: block;
+            font-size: 11px;
+            color: #00ffcc;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .time-24h {
+            width: 20%;
+            text-align: right;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+
+        <div class="input-container">
+            <label for="baseDateTime">Horarios del Admin Party
+    de Grow a Garden 2:</label>
+            <input type="datetime-local" id="baseDateTime" disabled>
+            
+            <div class="admin-panel">
+                <button id="adminBtn" class="admin-btn" onclick="checkAdmin()">Modo Admin 🔒</button>
+                <button id="updateBtn" class="apply-btn" onclick="updateTimes()">Aplicar Hora ⚡</button>
+            </div>
+        </div>
+
+        <div class="timezone-table" id="tableBody">
+        </div>
+
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "UIAUIA"; 
+
+        const countries = [
+            { name: "Nicaragua", flag: "🇳🇮", zone: "America/Managua" },
+            { name: "Honduras", flag: "🇭🇳", zone: "America/Tegucigalpa" },
+            { name: "Guatemala", flag: "🇬🇹", zone: "America/Guatemala" },
+            { name: "El Salvador", flag: "🇸🇻", zone: "America/El_Salvador" },
+            { name: "Costa Rica", flag: "🇨🇷", zone: "America/Costa_Rica" },
+            { name: "Panamá", flag: "🇵🇦", zone: "America/Panama" },
+            { name: "Perú", flag: "🇵🇪", zone: "America/Lima" },
+            { name: "Ecuador", flag: "🇪🇨", zone: "America/Guayaquil" },
+            { name: "Colombia", flag: "🇨🇴", zone: "America/Bogota" },
+            { name: "Venezuela", flag: "🇻🇪", zone: "America/Caracas" },
+            { name: "Bolivia", flag: "🇧🇴", zone: "America/La_Paz" },
+            { name: "Rep. Dominicana", flag: "🇩🇴", zone: "America/Santo_Domingo" },
+            { name: "Paraguay", flag: "🇵🇾", zone: "America/Asuncion" },
+            { name: "Chile", flag: "🇨🇱", zone: "America/Santiago" },
+            { name: "Argentina", flag: "🇦🇷", zone: "America/Argentina/Buenos_Aires" },
+            { name: "Uruguay", flag: "🇺🇾", zone: "America/Montevideo" },
+            { name: "Brasil", tag: "Distrito Federal", flag: "🇧🇷", zone: "America/Sao_Paulo" },
+            { name: "Brasil", tag: "MAO", flag: "🇧🇷", zone: "America/Manaus" },
+            { name: "Brasil", tag: "RB", flag: "🇧🇷", zone: "America/Rio_Branco" },
+            { name: "México", tag: "CDMX", flag: "🇲🇽", zone: "America/Mexico_City" },
+            { name: "México", tag: "PAZ / TJ", flag: "🇲🇽", zone: "America/Tijuana" },
+            { name: "EE. UU.", tag: "D.C.", flag: "🇺🇸", zone: "America/New_York" },
+            { name: "EE. UU.", tag: "CHI", flag: "🇺🇸", zone: "America/Chicago" },
+            { name: "EE. UU.", tag: "LA / PHX", flag: "🇺🇸", zone: "America/Los_Angeles" },
+            { name: "EE. UU.", tag: "DEN", flag: "🇺🇸", zone: "America/Denver" },
+           
+            { name: "Reino Unido", flag: "🇬🇧", zone: "Europe/London" },
+            { name: "Portugal", flag: "🇵🇹", zone: "Europe/Lisbon" },
+            { name: "España", flag: "🇪🇸", zone: "Europe/Madrid" },
+            { name: "Francia", flag: "🇫🇷", zone: "Europe/Paris" },
+            { name: "Alemania", flag: "🇩🇪", zone: "Europe/Berlin" },
+            { name: "Italia", flag: "🇮🇹", zone: "Europe/Rome" },
+            { name: "Suiza", flag: "🇨🇭", zone: "Europe/Zurich" },
+            { name: "Rusia", flag: "🇷🇺", zone: "Europe/Moscow" },
+            { name: "India", flag: "🇮🇳", zone: "Asia/Kolkata" }, 
+            { name: "China", flag: "🇨🇳", zone: "Asia/Shanghai" },
+            { name: "Corea del Sur", flag: "🇰🇷", zone: "Asia/Seoul" },
+            { name: "Japón", flag: "🇯🇵", zone: "Asia/Tokyo" },
+            { name: "Australia", flag: "🇦🇺", zone: "Australia/Sydney" }
+        ];
+
+        const dateTimeInput = document.getElementById('baseDateTime');
+        const tableBody = document.getElementById('tableBody');
+        const adminBtn = document.getElementById('adminBtn');
+        const updateBtn = document.getElementById('updateBtn');
+
+        const today = new Date();
+        dateTimeInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}T14:00`;
+
+        function checkAdmin() {
+            const pass = prompt("Introduce la contraseña de Administrador:");
+            if (pass === ADMIN_PASSWORD) {
+                dateTimeInput.disabled = false; 
+                adminBtn.textContent = "Admin Activado 🔓";
+                adminBtn.className = "admin-btn logged-in";
+                adminBtn.onclick = null; 
+                updateBtn.style.display = "inline-block"; 
+                alert("¡Acceso correcto! Ya puedes ajustar la fecha/hora.");
+            } else {
+                alert("Contraseña incorrecta.");
+            }
+        }
+
+        function updateTimes() {
+            const inputValue = dateTimeInput.value;
+            if (!inputValue) return;
+
+            const baseDate = new Date(inputValue + ":00-06:00");
+            if (isNaN(baseDate.getTime())) return; 
+
+            tableBody.innerHTML = '';
+
+            countries.forEach(country => {
+                const formatter = new Intl.DateTimeFormat('es-ES', {
+                    timeZone: country.zone,
+                    weekday: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                const formatter24 = new Intl.DateTimeFormat('es-ES', {
+                    timeZone: country.zone,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+
+                const parts = formatter.formatToParts(baseDate);
+                const parts24 = formatter24.formatToParts(baseDate);
+
+                let dayName = parts.find(p => p.type === 'weekday').value;
+                let hour12 = parts.find(p => p.type === 'hour').value;
+                let minute = parts.find(p => p.type === 'minute').value;
+                let dayPeriod = parts.find(p => p.type === 'dayPeriod')?.value || '';
+
+                let hour24 = parts24.find(p => p.type === 'hour').value;
+                let minute24 = parts24.find(p => p.type === 'minute').value;
+
+                // Quitar espacios agregados en el am / pm
+                dayPeriod = dayPeriod.toUpperCase().replace(/\s+/g, '').replace(/\./g, '').trim();
+
+                let str12h = parseInt(minute) === 0 ? `${parseInt(hour12)} ${dayPeriod}` : `${parseInt(hour12)}:${minute} ${dayPeriod}`;
+                let str24h = `${hour24}:${minute24}`;
+
+                const row = document.createElement('div');
+                row.className = 'country-row';
+                row.innerHTML = `
+                    <div class="country-info">
+                        <span class="flag">${country.flag}</span>
+                        <div>
+                            ${country.name}
+                            ${country.tag ? `<span class="region-tag">${country.tag}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="time-12h">
+                        <span class="day-text">${dayName}</span>
+                        ${str12h}
+                    </div>
+                    <div class="time-24h">${str24h}</div>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        dateTimeInput.addEventListener('change', updateTimes);
+        updateTimes();
+    </script>
+
+</body>
+</html>
+
+```
