@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios Mundiales Dinámicos</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            
+            background-image: url(https://i.postimg.cc/W1YQS1Zk/2-PM-20260629-124658-0000.png); 
+            background-size: cover;         
+            background-position: center;    
+            background-repeat: no-repeat;   
+            background-attachment: fixed;   
+            background-color: #1a252f;      
+            
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* 1. PANEL DE BOTONES (ADMIN PANEL) */
+        .admin-panel {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .admin-btn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .admin-btn.logged-in {
+            background: #2ecc71;
+            cursor: default;
+        }
+
+        .apply-btn {
+            background: #2ec4b6;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* PANEL INTERNO DE ENLACES Y VISIBILIDAD */
+        .admin-links-group {
+            display: none; 
+            background: rgba(27, 42, 53, 0.95);
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-links-group label {
+            font-size: 11px;
+            color: #2ec4b6;
+            font-weight: bold;
+            display: block;
+            margin-top: 6px;
+        }
+
+        .admin-links-group input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+
+        /* Estilo para la opción de visibilidad */
+        .visibility-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .visibility-control span {
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Interruptor elegante (Switch) */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2ecc71;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* 2. CONTENEDOR DE LA FECHA */
+        .date-container {
+            margin-bottom: 20px;
+            background: rgba(27, 42, 53, 0.85); 
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .formatted-date-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            text-transform: capitalize; 
+        }
+
+        input[type="datetime-local"] {
+            padding: 10px;
+            font-size: 15px;
+            border-radius: 10px;
+            border: none;
+            width: 90%;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-weight: bold;
+            margin-top: 8px;
+            display: none; 
+        }
+
+        /* 3. LOGOTIPO DEL JUEGO */
+        .logo-container {
+            background: rgba(255, 255, 255, 0.25); 
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+        }
+
+        .game-logo {
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 15px;
+            object-fit: contain;
+        }
+
+        /* Estilos del Temporizador */
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease, margin 0.3s ease;
+        }
+
+        .countdown-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 65px;
+        }
+
+        .countdown-number {
+            background: #ffffff;
+            color: #1c2b1e; 
+            font-size: 28px;
+            font-weight: 900;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .countdown-box.ms .countdown-number {
+            background: #4cb02c;
+            color: #ffffff;
+        }
+
+        .countdown-label {
+            font-size: 10px;
+            font-weight: bold;
+            color: #a4b3c6; 
+            text-transform: uppercase;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .countdown-separator {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 18px; 
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* 4. AREA DE TITULO CON AUTO-AJUSTE TOTAL */
+        .title-container {
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .editable-title {
+            font-size: 22px; 
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            white-space: normal;
+            word-wrap: break-word;
+            display: inline-block;
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+        }
+
+        .editable-title.mode-edit {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px dashed #2ec4b6;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        /* 5. TABLA INFERIOR DE HORARIOS */
+        .timezone-table {
+            background: rgba(27, 42, 53, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 25px;
+            padding: 20px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+            box-sizing: border-box;
+            margin-bottom: 40px;
+        }
+
+        .country-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 16px; 
+            font-weight: bold;
+        }
+
+        .country-row:last-child {
+            border-bottom: none;
+        }
+
+        .country-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 50%;
+            white-space: normal; 
+        }
+
+        .flag {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .region-tag {
+            font-size: 11px;
+            color: #bbb;
+            display: block;
+            font-weight: normal;
+            margin-top: 2px;
+        }
+
+        .time-12h {
+            width: 32%;
+            text-align: left;
+            line-height: 1.3;
+        }
+
+        .day-text {
+            display: block;
+            font-size: 11px;
+            color: #00ffcc;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .time-24h {
+            width: 18%;
+            text-align: right;
+            opacity: 0.85;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+
+        <div class="admin-panel">
+            <button id="adminBtn" class="admin-btn" onclick="checkAdmin()">Modo Admin 🔒</button>
+            <button id="updateBtn" class="apply-btn" onclick="updateTimes()">Aplicar Hora ⚡</button>
+            <button id="saveBtn" class="apply-btn" style="background: #3498db;" onclick="closeAdmin()">Guardar Cambios 💾</button>
+        </div>
+
+        <div class="admin-links-group" id="adminInputs">
+            <label>Enlace de la Imagen de Fondo (URL):</label>
+            <input type="text" id="bgLink" placeholder="Pega el enlace de la imagen de fondo..." oninput="changeBg()">
+            
+            <label>Enlace del Logotipo del Juego (URL):</label>
+            <input type="text" id="logoLink" placeholder="Pega el enlace de la imagen central..." oninput="changeLogo()">
+            
+            <div class="visibility-control">
+                <span>Mostrar Temporizador:</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggleTimerCheckbox" checked onchange="toggleTimerVisibility()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="date-container" id="dateContainer">
+            <div id="dateTextDisplay" class="formatted-date-text"></div>
+            <input type="datetime-local" id="baseDateTime">
+        </div>
+
+        <div class="logo-container">
+            <img id="gameLogoImg" class="game-logo" src="https://i.postimg.cc/Yq5rR8w0/Gag2-20260629-123926-0000.png" alt="Logo del Juego">
+        </div>
+
+        <div id="countdownTimerSection" class="countdown-container">
+            <div class="countdown-box">
+                <div id="timer-days" class="countdown-number">00</div>
+                <div class="countdown-label">Días</div>
+            </div>
+            <div class="countdown-separator">:</div>
+            <div class="countdown-box">
+                <div id="timer-hours" class="countdown-number">00</div>
+                <div class="countdown-label">Horas</div>
+            </div>
+            <div class="countdown-separator">:</div>
+            <div class="countdown-box">
+                <div id="timer-minutes" class="countdown-number">00</div>
+                <div class="countdown-label">Min</div>
+            </div>
+            <div class="countdown-separator">:</div>
+            <div class="countdown-box">
+                <div id="timer-seconds" class="countdown-number">00</div>
+                <div class="countdown-label">Seg</div>
+            </div>
+            <div class="countdown-separator">.</div>
+            <div class="countdown-box ms">
+                <div id="timer-ms" class="countdown-number">000</div>
+                <div class="countdown-label">Em</div>
+            </div>
+        </div>
+
+        <div class="title-container">
+            <div id="eventTitle" class="editable-title" contenteditable="false">Horarios del Admin Party de Grow a Garden 2</div>
+        </div>
+
+        <div class="timezone-table" id="tableBody">
+        </div>
+
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "UIAUIA"; 
+
+        const countries = [
+            { name: "Nicaragua", flag: "🇳🇮", zone: "America/Managua" },
+            { name: "Honduras", flag: "🇭🇳", zone: "America/Tegucigalpa" },
+            { name: "Guatemala", flag: "🇬🇹", zone: "America/Guatemala" },
+            { name: "El Salvador", flag: "🇸🇻", zone: "America/El_Salvador" },
+            { name: "Costa Rica", flag: "🇨🇷", zone: "America/Costa_Rica" },
+            { name: "Panamá", flag: "🇵🇦", zone: "America/Panama" },
+            { name: "Perú", flag: "🇵🇪", zone: "America/Lima" },
+            { name: "Ecuador", flag: "🇪🇨", zone: "America/Guayaquil" },
+            { name: "Colombia", flag: "🇨🇴", zone: "America/Bogota" },
+            { name: "Venezuela", flag: "🇻🇪", zone: "America/Caracas" },
+            { name: "Bolivia", flag: "🇧🇴", zone: "America/La_Paz" },
+            { name: "Rep. Dominicana", flag: "🇩🇴", zone: "America/Santo_Domingo" },
+            { name: "Paraguay", flag: "🇵🇾", zone: "America/Asuncion" },
+            { name: "Chile", flag: "🇨🇱", zone: "America/Santiago" },
+            { name: "Argentina", flag: "🇦🇷", zone: "America/Argentina/Buenos_Aires" },
+            { name: "Uruguay", flag: "🇺🇾", zone: "America/Montevideo" },
+            { name: "Brasil", tag: "Distrito Federal", flag: "🇧🇷", zone: "America/Sao_Paulo" },
+            { name: "Brasil", tag: "MAO", flag: "🇧🇷", zone: "America/Manaus" },
+            { name: "Brasil", tag: "RB", flag: "🇧🇷", zone: "America/Rio_Branco" },
+            { name: "México", tag: "CDMX", flag: "🇲🇽", zone: "America/Mexico_City" },
+            { name: "México", tag: "PAZ / TJ", flag: "🇲🇽", zone: "America/Tijuana" },
+            { name: "EE. UU.", tag: "D.C.", flag: "🇺🇸", zone: "America/New_York" },
+            { name: "EE. UU.", tag: "CHI", flag: "🇺🇸", zone: "America/Chicago" },
+            { name: "EE. UU.", tag: "LA / PHX", flag: "🇺🇸", zone: "America/Los_Angeles" },
+            { name: "EE. UU.", tag: "DEN", flag: "🇺🇸", zone: "America/Denver" },
+           
+            { name: "Reino Unido", flag: "🇬🇧", zone: "Europe/London" },
+            { name: "Portugal", flag: "🇵🇹", zone: "Europe/Lisbon" },
+            { name: "España", flag: "🇪🇸", zone: "Europe/Madrid" },
+            { name: "Francia", flag: "🇫🇷", zone: "Europe/Paris" },
+            { name: "Alemania", flag: "🇩🇪", zone: "Europe/Berlin" },
+            { name: "Italia", flag: "🇮🇹", zone: "Europe/Rome" },
+            { name: "Suiza", flag: "🇨🇭", zone: "Europe/Zurich" },
+            { name: "Rusia", flag: "🇷🇺", zone: "Europe/Moscow" },
+            { name: "India", flag: "🇮🇳", zone: "Asia/Kolkata" }, 
+            { name: "China", flag: "🇨🇳", zone: "Asia/Shanghai" },
+            { name: "Corea del Sur", flag: "🇰🇷", zone: "Asia/Seoul" },
+            { name: "Japón", flag: "🇯🇵", zone: "Asia/Tokyo" },
+            { name: "Australia", flag: "🇦🇺", zone: "Australia/Sydney" }
+        ];
+
+        const dateTimeInput = document.getElementById('baseDateTime');
+        const dateTextDisplay = document.getElementById('dateTextDisplay');
+        const eventTitleInput = document.getElementById('eventTitle'); 
+        const adminInputs = document.getElementById('adminInputs');
+        const bgLink = document.getElementById('bgLink');
+        const logoLink = document.getElementById('logoLink');
+        const gameLogoImg = document.getElementById('gameLogoImg');
+        const tableBody = document.getElementById('tableBody');
+        const adminBtn = document.getElementById('adminBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const countdownSection = document.getElementById('countdownTimerSection');
+        const toggleTimerCheckbox = document.getElementById('toggleTimerCheckbox');
+
+        let countdownInterval; 
+
+        const today = new Date();
+        dateTimeInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}T16:00`;
+
+        function checkAdmin() {
+            const pass = prompt("Introduce la contraseña de Administrador:");
+            if (pass === ADMIN_PASSWORD) {
+                dateTimeInput.style.display = "inline-block"; 
+                eventTitleInput.contentEditable = "true"; 
+                eventTitleInput.classList.add('mode-edit'); 
+                adminInputs.style.display = "block"; 
+                adminBtn.textContent = "Admin Activado 🔓";
+                adminBtn.className = "admin-btn logged-in";
+                updateBtn.style.display = "inline-block"; 
+                saveBtn.style.display = "inline-block"; 
+            } else {
+                alert("Contraseña incorrecta.");
+            }
+        }
+
+        function closeAdmin() {
+            dateTimeInput.style.display = "none"; 
+            eventTitleInput.contentEditable = "false"; 
+            eventTitleInput.classList.remove('mode-edit'); 
+            adminInputs.style.display = "none"; 
+            updateBtn.style.display = "none";
+            saveBtn.style.display = "none";
+            
+            adminBtn.textContent = "Modo Admin 🔒";
+            adminBtn.className = "admin-btn";
+            adminBtn.onclick = checkAdmin;
+            alert("¡Cambios aplicados con éxito!");
+        }
+
+        function changeBg() {
+            const val = bgLink.value.trim();
+            if(val) document.body.style.backgroundImage = `url(${val})`;
+        }
+
+        function changeLogo() {
+            const val = logoLink.value.trim();
+            if(val) gameLogoImg.src = val;
+        }
+
+        // MOSTRAR U OCULTAR EL TEMPORIZADOR DINÁMICAMENTE
+        function toggleTimerVisibility() {
+            if (toggleTimerCheckbox.checked) {
+                countdownSection.style.display = "flex";
+                startCountdown(); // Reinicia el contador si se vuelve a activar
+            } else {
+                countdownSection.style.display = "none";
+                if (countdownInterval) clearInterval(countdownInterval); // Detiene el consumo de recursos
+            }
+        }
+
+        function formatDisplayDate(dateStr) {
+            if(!dateStr) return "";
+            const parts = dateStr.split('T')[0].split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            
+            const dateObj = new Date(year, month, day);
+            
+            const opciones = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            let fechaLetras = dateObj.toLocaleDateString('es-ES', opciones);
+            
+            fechaLetras = fechaLetras.replace(',', '').replace(' de 20', ' del 20');
+            return fechaLetras;
+        }
+
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            
+            // Si el admin desactivó la visibilidad, no arranca la lógica interna
+            if (!toggleTimerCheckbox.checked) return;
+
+            const inputValue = dateTimeInput.value;
+            if (!inputValue) return;
+
+            const targetDate = new Date(inputValue + ":00-06:00");
+
+            function updateDisplay() {
+                const now = new Date();
+                const difference = targetDate - now;
+
+                if (difference <= 0) {
+                    document.getElementById('timer-days').textContent = "00";
+                    document.getElementById('timer-hours').textContent = "00";
+                    document.getElementById('timer-minutes').textContent = "00";
+                    document.getElementById('timer-seconds').textContent = "00";
+                    document.getElementById('timer-ms').textContent = "000";
+                    return;
+                }
+
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+                const ms = Math.floor((difference % 1000));
+
+                document.getElementById('timer-days').textContent = String(days).padStart(2, '0');
+                document.getElementById('timer-hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('timer-minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('timer-seconds').textContent = String(seconds).padStart(2, '0');
+                document.getElementById('timer-ms').textContent = String(ms).padStart(3, '0');
+            }
+
+            countdownInterval = setInterval(updateDisplay, 33);
+            updateDisplay();
+        }
+
+        function updateTimes() {
+            const inputValue = dateTimeInput.value;
+            if (!inputValue) return;
+
+            const baseDate = new Date(inputValue + ":00-06:00");
+            if (isNaN(baseDate.getTime())) return; 
+
+            dateTextDisplay.textContent = formatDisplayDate(inputValue);
+
+            tableBody.innerHTML = '';
+
+            countries.forEach(country => {
+                const formatter = new Intl.DateTimeFormat('es-ES', {
+                    timeZone: country.zone,
+                    weekday: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                const formatter24 = new Intl.DateTimeFormat('es-ES', {
+                    timeZone: country.zone,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+
+                const parts = formatter.formatToParts(baseDate);
+                const parts24 = formatter24.formatToParts(baseDate);
+
+                let dayName = parts.find(p => p.type === 'weekday').value;
+                let hour12 = parts.find(p => p.type === 'hour').value;
+                let minute = parts.find(p => p.type === 'minute').value;
+                let dayPeriod = parts.find(p => p.type === 'dayPeriod')?.value || '';
+
+                let hour24 = parts24.find(p => p.type === 'hour').value;
+                let minute24 = parts24.find(p => p.type === 'minute').value;
+
+                dayPeriod = dayPeriod.toUpperCase().replace(/\s+/g, '').replace(/\./g, '').trim();
+
+                let str12h = parseInt(minute) === 0 ? `${parseInt(hour12)} ${dayPeriod}` : `${parseInt(hour12)}:${minute} ${dayPeriod}`;
+                let str24h = `${hour24}:${minute24}`;
+
+                const row = document.createElement('div');
+                row.className = 'country-row';
+                row.innerHTML = `
+                    <div class="country-info">
+                        <span class="flag">${country.flag}</span>
+                        <div>
+                            ${country.name}
+                            ${country.tag ? `<span class="region-tag">${country.tag}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="time-12h">
+                        <span class="day-text">${dayName}</span>
+                        ${str12h}
+                    </div>
+                    <div class="time-24h">${str24h}</div>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            startCountdown();
+        }
+
+        dateTimeInput.addEventListener('change', updateTimes);
+        updateTimes();
+    </script>
+
+</body>
+</html>
